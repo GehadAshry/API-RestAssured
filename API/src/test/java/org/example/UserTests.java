@@ -1,47 +1,25 @@
 package org.example;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
+import utils.UserUtils;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class UserTests {
-    static String BaseURL = "https://reqres.in/api";
-    static String UserEndPoint = "/users";
-    static String LoginEndPoint = "/login";
-    String token;
-    Map<String,String> headers = new HashMap<>();
-    static String username = "eve.holt@reqres.in";
-    static String password = "cityslicka";
+
+
     SoftAssert softAssert = new SoftAssert();
 
 
-    @BeforeClass
-    public void Login(){
-        Response response = RestAssured.given().when().contentType(ContentType.JSON).body("{\n" +
 
-                "    \"email\": \""+ username +"\",\n" +
-
-                "    \"password\": \""+ password +"\"\n" +
-
-                "}").post(BaseURL+LoginEndPoint).then().extract().response();
-
-                JsonPath jsonPath = response.jsonPath();
-                token = jsonPath.get("token");
-
-    }
     @Test
     public void getSingleUserTest() {
         String expectedId = "2";
-        headers.put("Authorization", token);
-        Response response = RestAssured.given().when().headers(headers).get (BaseURL+UserEndPoint+"/2").then().extract().response();
+        Response response = UserUtils.getSingleUser(2);
         JsonPath jsonPath = response.jsonPath();
         int actualId = jsonPath.get("data.id");
         Assert.assertEquals(response.statusCode(),200,"Status code is not correct");
@@ -56,9 +34,8 @@ public class UserTests {
         String expectedTotalNumberOfUsers = "12";
         String expectedTotalPages = "2";
 
-        Map<String,String> queryParams = new HashMap<>();
-        queryParams.put("page", "2");
-        Response response = RestAssured.given().queryParams(queryParams).get (BaseURL+UserEndPoint).then().extract().response();
+
+        Response response = UserUtils.getListUsers("2");
         JsonPath jsonPath = response.jsonPath();
         int actualPerPage = jsonPath.get("per_page");
         int actualTotalPages = jsonPath.get("total_pages");
@@ -86,11 +63,7 @@ public class UserTests {
         String expectedName = "Gehad";
         String expectedJob = "Tester";
 
-        Response response = RestAssured.given().contentType(ContentType.JSON).body("{\n" +
-                "    \"name\": \""+expectedName+"\",\n" +
-                "    \"job\": \""+expectedJob+"\"\n" +
-                "}").post(BaseURL+UserEndPoint).then().extract().response();
-
+        Response response = UserUtils.createUser("Gehad", "Tester");
         JsonPath jsonPath = response.jsonPath();
         String actualName = jsonPath.get("name");
         String actualJob = jsonPath.get("job");
